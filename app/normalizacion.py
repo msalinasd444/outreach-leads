@@ -1,6 +1,6 @@
 """Normalización y validación de los datos de un lead.
 
-Funciones puras, sin FastAPI ni base de datos: se testean solas y la fase 2 puede
+Funciones puras, sin FastAPI ni base de datos: se testean solas y el worker puede
 contar con que lo que sale de aquí no trae saltos de línea, invisibles ni etiquetas.
 
 Los mensajes de error son fijos y nunca incluyen el valor recibido, porque la API
@@ -58,7 +58,7 @@ def _normalizar_texto(valor: str, max_largo: int) -> str:
     # contener enlaces ni direcciones: mejor que no entren.
     if "@" in texto or "://" in texto:
         raise ErrorDeValidacion("no debe contener direcciones de correo ni enlaces")
-    # En la fase 2 los datos irán delimitados dentro del prompt: sin < ni >, un
+    # Los datos irán delimitados dentro del prompt: sin < ni >, un
     # dato no puede abrir ni cerrar una etiqueta.
     if "<" in texto or ">" in texto:
         raise ErrorDeValidacion("no debe contener los caracteres < ni >")

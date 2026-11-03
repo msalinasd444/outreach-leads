@@ -1,0 +1,46 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# El token del job solo puede leer el repo.
+permissions:
+  contents: read
+
+# En un PR, un push nuevo cancela el run anterior, que ya quedó obsoleto.
+# En main no se cancela: cada commit de main conserva su resultado.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      # Compose lee estas variables del entorno (en el CI no hay .env).
+      # La BD outreach_test la crea docker/postgres-init al arrancar con volumen vacío.
+      POSTGRES_USER: outreach
+      POSTGRES_DB: outreach
+    steps:
+      # Fijado por SHA: un tag se puede mover, un commit no.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Contraseña nueva en cada run para el Postgres efímero: no hay ninguna en el repo.
+      - name: Generar contraseña de Postgres
+        run: |
+          pw="$(openssl rand -hex 16)"
+          echo "::add-mask::$pw"
+          echo "POSTGRES_PASSWORD=$pw" >> "$GITHUB_ENV"
+
+      # El mismo comando que en local; el código de salida de pytest decide el resultado.
+      - name: Tests contra Postgres real
+        run: docker compose run --rm --build api pytest
+
+      - name: Logs de Postgres si algo falló
+        if: failure()
+        run: docker compose logs --no-color db
