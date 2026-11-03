@@ -34,7 +34,7 @@ MOTIVO_RECHAZADO = "El servicio de generación rechazó la solicitud."
 MOTIVO_NO_DISPONIBLE = "El servicio de generación no respondió; se agotaron los intentos."
 
 # Con gpt-oss los tokens de razonamiento cuentan aquí. En una prueba real la
-# respuesta usó unos 130 tokens: 1000 dejan margen de sobra.
+# respuesta usó unos 140 tokens: 1000 dejan margen de sobra.
 MAX_TOKENS_RESPUESTA = 1000
 # Más baja que el valor por defecto (1): el correo debe seguir reglas, no sorprender.
 TEMPERATURA = 0.5
