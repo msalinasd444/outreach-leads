@@ -34,8 +34,9 @@ class Settings(BaseSettings):
     # más las esperas) por debajo del umbral para darlo por trabado.
     groq_timeout: float = Field(default=20, gt=0, le=120)
     # Llamadas por minuto como máximo. El free tier de gpt-oss-20b da unos 8.000
-    # tokens por minuto y cada correo gasta unos 455: caben ~17, dejamos margen.
-    groq_rpm: int = Field(default=15, ge=1, le=1000)
+    # tokens por minuto y, medido en una prueba real, cada correo gasta unos 700
+    # (unos 567 de prompt y 130 de respuesta): caben ~11, dejamos margen.
+    groq_rpm: int = Field(default=10, ge=1, le=1000)
 
     @field_validator("groq_api_key", "groq_model", "groq_reasoning_effort", mode="before")
     @classmethod

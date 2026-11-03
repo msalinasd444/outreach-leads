@@ -404,8 +404,8 @@ def test_apagado_durante_la_espera_de_ritmo():
 
 def test_peor_caso_por_lead():
     base = {"database_url": "postgresql://u:p@db/x", "groq_api_key": CLAVE, "groq_model": MODELO}
-    # 4 llamadas × (20 s + 4 s de ritmo) + 2 esperas de hasta 60 s
-    assert peor_caso_por_lead_s(Settings(**base)) == 216.0
+    # 4 llamadas × (20 s + 6 s de ritmo) + 2 esperas de hasta 60 s
+    assert peor_caso_por_lead_s(Settings(**base)) == 224.0
     # Los máximos que permite la config: 4 × (120 + 60) + 120
     assert peor_caso_por_lead_s(Settings(**base, groq_timeout=120, groq_rpm=1)) == 840.0
 

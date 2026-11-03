@@ -30,7 +30,7 @@ services:
       GROQ_MODEL: ${GROQ_MODEL:-}
       GROQ_REASONING_EFFORT: ${GROQ_REASONING_EFFORT:-}
       GROQ_TIMEOUT: ${GROQ_TIMEOUT:-20}
-      GROQ_RPM: ${GROQ_RPM:-15}
+      GROQ_RPM: ${GROQ_RPM:-10}
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:

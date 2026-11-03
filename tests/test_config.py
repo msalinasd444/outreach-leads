@@ -36,7 +36,7 @@ def test_valores_por_defecto(entorno):
     assert s.groq_model == "openai/gpt-oss-20b"
     assert s.groq_reasoning_effort is None
     assert s.groq_timeout == 20
-    assert s.groq_rpm == 15
+    assert s.groq_rpm == 10
 
 
 def test_con_worker_apagado_no_hace_falta_groq(entorno):
