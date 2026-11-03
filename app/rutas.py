@@ -17,6 +17,7 @@ from app.schemas import (
     LeadSalida,
     ListaLeads,
 )
+from app.worker import Worker
 
 log = logging.getLogger(__name__)
 
@@ -30,8 +31,16 @@ def obtener_pool(request: Request) -> ConnectionPool:
 Pool = Annotated[ConnectionPool, Depends(obtener_pool)]
 
 
+def obtener_worker(request: Request) -> Worker | None:
+    # None con WORKER_ACTIVO=false.
+    return getattr(request.app.state, "worker", None)
+
+
+WorkerOpcional = Annotated[Worker | None, Depends(obtener_worker)]
+
+
 @router.post("/leads", status_code=status.HTTP_202_ACCEPTED)
-def crear_lead(lead: LeadEntrada, pool: Pool) -> LeadCreado:
+def crear_lead(lead: LeadEntrada, pool: Pool, worker: WorkerOpcional) -> LeadCreado:
     # 202: el lead quedó guardado, pero el correo se genera después.
     # El bloque hace COMMIT al salir, antes del return: si responde 202, el lead está guardado.
     with pool.connection() as conn:
@@ -41,6 +50,10 @@ def crear_lead(lead: LeadEntrada, pool: Pool) -> LeadCreado:
             dominio=lead.dominio,
             cargo_contacto=lead.cargo_contacto,
         )
+    # Después del COMMIT, para que el worker ya pueda ver el lead. No espera al LLM:
+    # avisar() solo despierta al hilo.
+    if worker is not None:
+        worker.avisar()
     return LeadCreado(**fila)
 
 

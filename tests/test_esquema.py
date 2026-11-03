@@ -5,7 +5,9 @@ from datetime import datetime, timezone
 import pytest
 from psycopg import errors
 
+from app.correo import MAX_ASUNTO, MAX_CUERPO, MIN_ASUNTO, MIN_CUERPO
 from app.db import aplicar_esquema
+from tests.datos_de_prueba import ASUNTO_VALIDO, CUERPO_VALIDO
 
 AHORA = datetime.now(timezone.utc)
 
@@ -29,7 +31,7 @@ def test_aplicar_esquema_dos_veces_no_falla_ni_borra_datos(conn, pool, insertar)
     "campos",
     [
         {"estado": "procesando", "tomado_en": AHORA},
-        {"estado": "procesado", "asunto": "Hola", "cuerpo": "Texto"},
+        {"estado": "procesado", "asunto": ASUNTO_VALIDO, "cuerpo": CUERPO_VALIDO},
         {"estado": "error", "motivo_error": "No se pudo generar el correo"},
     ],
     ids=["procesando", "procesado", "error"],
@@ -84,3 +86,26 @@ def test_datos_del_lead_invalidos_se_rechazan(insertar, campos):
 def test_datos_del_lead_son_obligatorios(insertar, columna):
     with pytest.raises(errors.NotNullViolation):
         insertar(**{columna: None})
+
+
+# --- Largo del correo: los CHECK coinciden con app/correo.py --------------------
+
+@pytest.mark.parametrize("asunto, cuerpo", [
+    ("a" * MIN_ASUNTO, CUERPO_VALIDO),
+    ("a" * MAX_ASUNTO, CUERPO_VALIDO),
+    (ASUNTO_VALIDO, "a" * MIN_CUERPO),
+    (ASUNTO_VALIDO, "a" * MAX_CUERPO),
+], ids=["asunto-minimo", "asunto-maximo", "cuerpo-minimo", "cuerpo-maximo"])
+def test_correo_en_los_limites_se_acepta(insertar, asunto, cuerpo):
+    assert insertar(estado="procesado", asunto=asunto, cuerpo=cuerpo)["estado"] == "procesado"
+
+
+@pytest.mark.parametrize("asunto, cuerpo", [
+    ("a" * (MIN_ASUNTO - 1), CUERPO_VALIDO),
+    ("a" * (MAX_ASUNTO + 1), CUERPO_VALIDO),
+    (ASUNTO_VALIDO, "a" * (MIN_CUERPO - 1)),
+    (ASUNTO_VALIDO, "a" * (MAX_CUERPO + 1)),
+], ids=["asunto-corto", "asunto-largo", "cuerpo-corto", "cuerpo-largo"])
+def test_correo_fuera_de_rango_se_rechaza(insertar, asunto, cuerpo):
+    with pytest.raises(errors.CheckViolation):
+        insertar(estado="procesado", asunto=asunto, cuerpo=cuerpo)

@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from tests.datos_de_prueba import ASUNTO_VALIDO, CUERPO_VALIDO
+
 LEAD = {"nombre_empresa": "Acme", "dominio": "acme.com", "cargo_contacto": "CTO"}
 
 
@@ -62,7 +64,7 @@ def test_get_sin_leads(cliente):
 
 def test_get_muestra_cada_lead_con_su_estado_correo_y_fecha(cliente, insertar):
     ahora = datetime.now(timezone.utc)
-    insertar(estado="procesado", asunto="Hola", cuerpo="Texto", creado_en=ahora - timedelta(minutes=3))
+    insertar(estado="procesado", asunto=ASUNTO_VALIDO, cuerpo=CUERPO_VALIDO, creado_en=ahora - timedelta(minutes=3))
     insertar(estado="error", motivo_error="No se pudo generar el correo", creado_en=ahora - timedelta(minutes=2))
     insertar(estado="procesando", tomado_en=ahora, creado_en=ahora - timedelta(minutes=1))
     pendiente = insertar(creado_en=ahora)
@@ -84,7 +86,7 @@ def test_get_muestra_cada_lead_con_su_estado_correo_y_fecha(cliente, insertar):
     assert datetime.fromisoformat(leads[0]["creado_en"]) == pendiente["creado_en"]
     assert leads[1]["correo"] is None and leads[1]["motivo_error"] is None
     assert leads[2]["correo"] is None and leads[2]["motivo_error"] == "No se pudo generar el correo"
-    assert leads[3]["correo"] == {"asunto": "Hola", "cuerpo": "Texto"} and leads[3]["motivo_error"] is None
+    assert leads[3]["correo"] == {"asunto": ASUNTO_VALIDO, "cuerpo": CUERPO_VALIDO} and leads[3]["motivo_error"] is None
 
 
 def test_get_ordena_por_fecha_de_creacion_y_desempata_por_id(cliente, insertar):
