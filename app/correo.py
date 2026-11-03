@@ -30,7 +30,12 @@ REGLAS = {
     "caracteres": "no uses tabulaciones ni caracteres invisibles o de control",
     "largo_asunto": f"el asunto debe tener entre {MIN_ASUNTO} y {MAX_ASUNTO} caracteres",
     "largo_cuerpo": f"el cuerpo debe tener entre {MIN_CUERPO} y {MAX_CUERPO} caracteres",
-    "barra_invertida": "no escribas barras invertidas ni secuencias como \\n; usa saltos de línea reales",
+    # Dentro del JSON, \n es la forma correcta de escribir un salto de línea; lo que
+    # falla es \\n, que al leer el JSON deja una barra y una n en el texto.
+    "barra_invertida": (
+        "el texto no debe contener barras invertidas: en el JSON, escribe cada salto de "
+        "línea con el escape \\n de una sola barra, nunca con \\\\n"
+    ),
     "marcador": "no dejes marcadores por completar como [Nombre], {campo}, ___ o XXX",
     "correo": "no incluyas direcciones de correo",
     "enlace": "no incluyas enlaces, direcciones web ni dominios",
