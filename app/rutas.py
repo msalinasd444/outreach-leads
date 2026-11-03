@@ -4,7 +4,7 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from psycopg_pool import ConnectionPool
 
 from app import repositorio
@@ -37,6 +37,12 @@ def obtener_worker(request: Request) -> Worker | None:
 
 
 WorkerOpcional = Annotated[Worker | None, Depends(obtener_worker)]
+
+
+@router.get("/", include_in_schema=False)
+def raiz() -> RedirectResponse:
+    """La URL base lleva a la documentación interactiva en vez de responder 404."""
+    return RedirectResponse("/docs")
 
 
 @router.post("/leads", status_code=status.HTTP_202_ACCEPTED)
