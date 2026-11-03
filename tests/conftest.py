@@ -4,10 +4,15 @@ import os
 
 import psycopg
 import pytest
+from fastapi.testclient import TestClient
+from psycopg import sql
 from psycopg.rows import dict_row
 
-from app.config import Settings
+from app.config import Settings, get_settings
 from app.db import aplicar_esquema, crear_pool
+from app.main import app
+
+BASE_LEAD = {"nombre_empresa": "Acme", "dominio": "acme.com", "cargo_contacto": "CTO"}
 
 
 @pytest.fixture(scope="session")
@@ -39,3 +44,28 @@ def conn(pool, test_db_url):
     with psycopg.connect(test_db_url, autocommit=True, row_factory=dict_row) as conn:
         conn.execute("TRUNCATE leads RESTART IDENTITY")
         yield conn
+
+
+@pytest.fixture
+def insertar(conn):
+    """Inserta una fila directo en la BD (saltándose la API), con valores válidos por defecto."""
+
+    def _insertar(**cambios):
+        fila = {**BASE_LEAD, **cambios}
+        query = sql.SQL("INSERT INTO leads ({cols}) VALUES ({vals}) RETURNING *").format(
+            cols=sql.SQL(", ").join(map(sql.Identifier, fila)),
+            vals=sql.SQL(", ").join([sql.Placeholder()] * len(fila)),
+        )
+        return conn.execute(query, list(fila.values())).fetchone()
+
+    return _insertar
+
+
+@pytest.fixture
+def cliente(conn, test_db_url, monkeypatch):
+    """La app real, con su lifespan, apuntando a la BD de test."""
+    monkeypatch.setenv("DATABASE_URL", test_db_url)
+    get_settings.cache_clear()
+    with TestClient(app) as cliente:  # el "with" ejecuta el lifespan (pool + esquema)
+        yield cliente
+    get_settings.cache_clear()
