@@ -19,6 +19,7 @@ RUN pip install -r requirements.txt \
 COPY app ./app
 COPY migraciones ./migraciones
 COPY tests ./tests
+COPY pytest.ini ./
 
 USER app
 EXPOSE 8000
