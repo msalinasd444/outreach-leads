@@ -157,3 +157,16 @@ def test_lo_que_pedimos_cabe_en_lo_que_validamos():
     assert CUERPO_MAX_PEDIDO < MAX_CUERPO
     # 60 palabras en español superan con holgura el mínimo de caracteres.
     assert CUERPO_MIN_PALABRAS * 4 > MIN_CUERPO
+
+
+def test_el_sistema_aclara_que_la_empresa_es_la_del_destinatario():
+    # En la prueba real, el modelo escribió "Me dirijo a usted desde <empresa del lead>".
+    assert "nombre_empresa es la empresa donde trabaja el destinatario" in SISTEMA
+    assert "El remitente no pertenece a esa empresa" in SISTEMA
+    assert "nunca escribas como si fuera parte de ella" in SISTEMA
+
+
+def test_el_sistema_pide_un_asunto_segun_el_cargo():
+    # En la prueba real, los tres asuntos fueron "Propuesta de colaboración para <empresa>".
+    assert "se refiere al área del cargo" in SISTEMA
+    assert "Propuesta de colaboración" in SISTEMA  # como ejemplo de lo que hay que evitar
