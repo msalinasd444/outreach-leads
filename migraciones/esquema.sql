@@ -54,6 +54,15 @@ CREATE TABLE IF NOT EXISTS leads (
     ),
     CONSTRAINT leads_error_con_motivo CHECK (
         estado <> 'error' OR motivo_error IS NOT NULL
+    ),
+
+    -- Mismos límites que app/correo.py (MIN/MAX_ASUNTO y MIN/MAX_CUERPO): el worker
+    -- ya valida el correo, pero la base no guarda uno fuera de rango.
+    CONSTRAINT leads_asunto_acotado CHECK (
+        asunto IS NULL OR char_length(asunto) BETWEEN 5 AND 90
+    ),
+    CONSTRAINT leads_cuerpo_acotado CHECK (
+        cuerpo IS NULL OR char_length(cuerpo) BETWEEN 80 AND 1000
     )
 );
 

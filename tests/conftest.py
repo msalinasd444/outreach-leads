@@ -46,8 +46,15 @@ def test_db_url() -> str:
 
 @pytest.fixture(scope="session")
 def pool(test_db_url):
-    """Pool creado con el mismo código que usa la app, con el esquema ya aplicado."""
+    """Pool creado con el mismo código que usa la app, con el esquema ya aplicado.
+
+    La tabla se borra antes: CREATE TABLE IF NOT EXISTS no cambia una tabla que ya
+    existe, y así los tests siempre corren contra el esquema actual. Es la base de
+    tests: test_db_url ya comprobó que no es la de la app.
+    """
     pool = crear_pool(Settings(database_url=test_db_url, worker_activo=False))
+    with pool.connection() as c:
+        c.execute("DROP TABLE IF EXISTS leads")
     aplicar_esquema(pool)
     yield pool
     pool.close()
