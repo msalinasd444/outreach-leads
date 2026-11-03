@@ -14,6 +14,25 @@ from app.main import app
 
 BASE_LEAD = {"nombre_empresa": "Acme", "dominio": "acme.com", "cargo_contacto": "CTO"}
 
+# Variables que compose le pasa al contenedor desde tu .env (puede traer la clave real).
+VARIABLES_DEL_WORKER = (
+    "WORKER_ACTIVO",
+    "GROQ_API_KEY",
+    "GROQ_MODEL",
+    "GROQ_REASONING_EFFORT",
+    "GROQ_TIMEOUT",
+    "GROQ_RPM",
+)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def sin_configuracion_real_del_worker():
+    """Ningún test lee la clave ni la config de Groq del entorno: cada test arma la suya."""
+    with pytest.MonkeyPatch.context() as mp:
+        for nombre in VARIABLES_DEL_WORKER:
+            mp.delenv(nombre, raising=False)
+        yield
+
 
 @pytest.fixture(scope="session")
 def test_db_url() -> str:
@@ -28,7 +47,7 @@ def test_db_url() -> str:
 @pytest.fixture(scope="session")
 def pool(test_db_url):
     """Pool creado con el mismo código que usa la app, con el esquema ya aplicado."""
-    pool = crear_pool(Settings(database_url=test_db_url))
+    pool = crear_pool(Settings(database_url=test_db_url, worker_activo=False))
     aplicar_esquema(pool)
     yield pool
     pool.close()
@@ -65,6 +84,8 @@ def insertar(conn):
 def cliente(conn, test_db_url, monkeypatch):
     """La app real, con su lifespan, apuntando a la BD de test."""
     monkeypatch.setenv("DATABASE_URL", test_db_url)
+    # Los tests de la API no generan correos; el worker se prueba aparte.
+    monkeypatch.setenv("WORKER_ACTIVO", "false")
     get_settings.cache_clear()
     with TestClient(app) as cliente:  # el "with" ejecuta el lifespan (pool + esquema)
         yield cliente

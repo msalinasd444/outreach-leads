@@ -4,3 +4,6 @@ psycopg[binary,pool]==3.3.6
 psycopg-pool==3.3.3
 pydantic==2.14.2
 pydantic-settings==2.16.2
+groq==1.7.0
+# Lo trae groq, pero lo importamos directo (timeouts y transporte de los tests).
+httpx==0.28.1
