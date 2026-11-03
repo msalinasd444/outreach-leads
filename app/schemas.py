@@ -71,7 +71,7 @@ class LeadSalida(BaseModel):
     def desde_fila(cls, fila: dict) -> "LeadSalida":
         # El correo y el motivo se muestran según el estado, no solo según si la
         # columna tiene algo: así el significado de la respuesta no depende de
-        # cómo el worker de la fase 2 limpie las columnas al reintentar.
+        # cómo el worker limpie las columnas al reintentar.
         procesado = fila["estado"] == "procesado"
         return cls(
             id=fila["id"],

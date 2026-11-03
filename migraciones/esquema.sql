@@ -61,10 +61,10 @@ CREATE TABLE IF NOT EXISTS leads (
 CREATE INDEX IF NOT EXISTS leads_creado_en_idx
     ON leads (creado_en DESC, id DESC);
 
--- Cola del worker (fase 2): solo filas pendientes, en orden de llegada.
+-- Cola del worker: solo filas pendientes, en orden de llegada.
 CREATE INDEX IF NOT EXISTS leads_pendientes_idx
     ON leads (creado_en, id) WHERE estado = 'pendiente';
 
--- Rescate de leads trabados en "procesando" (fase 2).
+-- Rescate de leads trabados en "procesando".
 CREATE INDEX IF NOT EXISTS leads_procesando_idx
     ON leads (tomado_en) WHERE estado = 'procesando';

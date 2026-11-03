@@ -24,9 +24,9 @@ async def lifespan(app: FastAPI):
     try:
         aplicar_esquema(pool)
         app.state.pool = pool
-        # Fase 2: aquí se arranca el hilo del worker.
+        # Aquí se arrancará el hilo del worker.
         yield
-        # Fase 2: aquí se le avisa al worker que pare y se espera a que termine.
+        # Aquí se le avisará al worker que pare y se esperará a que termine.
     finally:
         pool.close()
 

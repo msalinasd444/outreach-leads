@@ -25,6 +25,6 @@ USER app
 EXPOSE 8000
 
 # Render define PORT; en local usamos 8000. "exec" hace que uvicorn reciba
-# SIGTERM directamente y se apague limpio (en la fase 2 eso detiene el worker).
+# SIGTERM directamente y se apague limpio (así también se detendrá el worker).
 # Un solo proceso uvicorn: el worker vivirá dentro de él.
 CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
