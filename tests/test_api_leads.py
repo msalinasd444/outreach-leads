@@ -162,3 +162,14 @@ def test_health_sin_base_de_datos_responde_503(cliente):
     r = cliente.get("/health")
     assert r.status_code == 503
     assert r.json() == {"estado": "sin base de datos"}
+
+
+# --- / -----------------------------------------------------------------------
+
+def test_raiz_redirige_a_docs_y_no_aparece_en_openapi(cliente):
+    r = cliente.get("/", follow_redirects=False)
+    assert r.status_code == 307
+    assert r.headers["location"] == "/docs"
+    # El destino existe: si alguien desactiva /docs, la redirección llevaría a un 404.
+    assert cliente.get("/").status_code == 200
+    assert "/" not in cliente.app.openapi()["paths"]
