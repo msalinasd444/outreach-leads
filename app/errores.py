@@ -5,6 +5,7 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from psycopg import OperationalError
 
 from app.schemas import TIPO_VALOR_INVALIDO
 
@@ -65,6 +66,18 @@ async def _manejar_error_inesperado(request: Request, exc: Exception) -> JSONRes
     return JSONResponse(status_code=500, content={"detail": "Error interno"})
 
 
+async def _manejar_base_no_disponible(request: Request, exc: OperationalError) -> JSONResponse:
+    # OperationalError cubre la base caída o lenta: sin conexión libre en el pool
+    # (PoolTimeout), pool cerrado (PoolClosed), conexión perdida, consulta cancelada.
+    # Es transitorio, así que 503 le dice al cliente que puede reintentar. Este
+    # handler no re-lanza la excepción, por eso aquí sí registramos el traceback.
+    log.error(
+        "Base de datos no disponible en %s %s", request.method, request.url.path, exc_info=exc
+    )
+    return JSONResponse(status_code=503, content={"detail": "Servicio no disponible temporalmente"})
+
+
 def registrar_manejadores(app: FastAPI) -> None:
     app.add_exception_handler(RequestValidationError, _manejar_validacion)
+    app.add_exception_handler(OperationalError, _manejar_base_no_disponible)
     app.add_exception_handler(Exception, _manejar_error_inesperado)
