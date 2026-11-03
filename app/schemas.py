@@ -1,7 +1,8 @@
 """Modelos de la API. La entrada pasa por normalizacion.py antes de llegar al resto del código."""
 
 from collections.abc import Callable
-from typing import Annotated
+from datetime import datetime
+from typing import Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, ConfigDict
 from pydantic_core import PydanticCustomError
@@ -32,3 +33,59 @@ class LeadEntrada(BaseModel):
     nombre_empresa: Annotated[str, _validador(normalizacion.normalizar_nombre_empresa)]
     dominio: Annotated[str, _validador(normalizacion.normalizar_dominio)]
     cargo_contacto: Annotated[str, _validador(normalizacion.normalizar_cargo_contacto)]
+
+
+# Límites de la paginación de GET /leads.
+LIMIT_POR_DEFECTO = 50
+LIMIT_MAXIMO = 200
+# Tope para que un offset absurdo responda 422 en vez de un error de Postgres (500).
+OFFSET_MAXIMO = 1_000_000
+
+Estado = Literal["pendiente", "procesando", "procesado", "error"]
+
+
+class LeadCreado(BaseModel):
+    """Respuesta del POST: lo justo para ubicar el lead después en el GET."""
+
+    id: int
+    estado: Estado
+    creado_en: datetime
+
+
+class Correo(BaseModel):
+    asunto: str
+    cuerpo: str
+
+
+class LeadSalida(BaseModel):
+    id: int
+    nombre_empresa: str
+    dominio: str
+    cargo_contacto: str
+    estado: Estado
+    correo: Correo | None
+    motivo_error: str | None
+    creado_en: datetime
+
+    @classmethod
+    def desde_fila(cls, fila: dict) -> "LeadSalida":
+        # El correo y el motivo se muestran según el estado, no solo según si la
+        # columna tiene algo: así el significado de la respuesta no depende de
+        # cómo el worker de la fase 2 limpie las columnas al reintentar.
+        procesado = fila["estado"] == "procesado"
+        return cls(
+            id=fila["id"],
+            nombre_empresa=fila["nombre_empresa"],
+            dominio=fila["dominio"],
+            cargo_contacto=fila["cargo_contacto"],
+            estado=fila["estado"],
+            correo=Correo(asunto=fila["asunto"], cuerpo=fila["cuerpo"]) if procesado else None,
+            motivo_error=fila["motivo_error"] if fila["estado"] == "error" else None,
+            creado_en=fila["creado_en"],
+        )
+
+
+class ListaLeads(BaseModel):
+    leads: list[LeadSalida]
+    limit: int
+    offset: int
