@@ -166,7 +166,7 @@ nada, y se reescribieron.
 
 ### Tests automáticos y CI
 
-- **395 tests** con `docker compose run --rm --build api pytest`, contra
+- **396 tests** con `docker compose run --rm --build api pytest`, contra
   un Postgres real y con el SDK real de Groq sobre un transporte HTTP
   simulado (sin red ni clave real). El detalle por archivo está en el
   README.
