@@ -76,7 +76,7 @@ Hace falta en tres casos:
 docker compose run --rm --build api pytest
 ```
 
-Son **395 tests**. Corren contra un **Postgres real**, en la base `outreach_test`, separada de la de la app. Un test se niega a correr si las dos URLs coinciden.
+Son **396 tests**. Corren contra un **Postgres real**, en la base `outreach_test`, separada de la de la app. Un test se niega a correr si las dos URLs coinciden.
 
 Las llamadas al LLM usan el **SDK real de Groq** sobre un transporte HTTP simulado (`httpx.MockTransport`): no hay red ni clave real. Una fixture borra las variables de Groq del entorno al empezar, para que ningún test pueda usar la clave de tu `.env`.
 
@@ -85,7 +85,7 @@ Las llamadas al LLM usan el **SDK real de Groq** sobre un transporte HTTP simula
 | `test_normalizacion.py` | 55 | Normalización de la entrada (NFKC, invisibles, dominio) y mensajes fijos |
 | `test_errores.py` | 17 | 422 sin repetir lo enviado, 500 genérico y 503 sin base |
 | `test_esquema.py` | 33 | CHECK de la base, coherencia entre estados e idempotencia del esquema |
-| `test_api_leads.py` | 17 | POST y GET contra la app real: 202, normalización y paginación |
+| `test_api_leads.py` | 18 | POST y GET contra la app real: 202, normalización y paginación |
 | `test_config.py` | 28 | Variables obligatorias, valores inválidos y errores sin secretos |
 | `test_correo.py` | 96 | Validación del correo generado, incluidos textos legítimos que deben pasar |
 | `test_prompt.py` | 43 | Datos del lead como datos, intentos de inyección, dominio fuera del prompt y nota de reintento |
